@@ -6,15 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Calendar, DollarSign } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, Calendar, DollarSign, Clock } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const MyRentals = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every minute for live timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -109,8 +119,8 @@ const MyRentals = () => {
 
         {rentals && rentals.length > 0 ? (
           <div className="space-y-4">
-            {rentals.map((rental) => (
-              <Card key={rental.id}>
+            {rentals.map((rental, index) => (
+              <Card key={rental.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-3">
@@ -137,6 +147,14 @@ const MyRentals = () => {
                       Started: {format(new Date(rental.start_time), "PPp")}
                     </span>
                   </div>
+                  {rental.status === "active" && (
+                    <div className="flex items-center gap-2 text-primary font-semibold">
+                      <Clock className="w-4 h-4 animate-pulse" />
+                      <span>
+                        Duration: {formatDistanceToNow(new Date(rental.start_time), { addSuffix: false })}
+                      </span>
+                    </div>
+                  )}
                   {rental.end_time && (
                     <>
                       <div className="flex items-center gap-2 text-muted-foreground">

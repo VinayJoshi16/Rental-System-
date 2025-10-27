@@ -225,13 +225,14 @@ const Bikes = () => {
 
         {filteredAndSortedBikes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAndSortedBikes.map((bike) => (
-              <BikeCard
-                key={bike.id}
-                bike={bike}
-                onRent={handleRent}
-                isRenting={rentingBikeId === bike.id}
-              />
+            {filteredAndSortedBikes.map((bike, index) => (
+              <div key={bike.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                <BikeCard
+                  bike={bike}
+                  onRent={handleRent}
+                  isRenting={rentingBikeId === bike.id}
+                />
+              </div>
             ))}
           </div>
         ) : (

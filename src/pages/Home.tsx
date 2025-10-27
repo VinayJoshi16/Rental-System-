@@ -79,7 +79,7 @@ const Home = () => {
       {/* Features Section */}
       <section className="py-20 bg-card/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 animate-fade-in">
             <h2 className="text-4xl font-bold mb-4">Why Choose PedalSync?</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               We make bike rental simple, secure, and seamless
@@ -90,7 +90,8 @@ const Home = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="p-6 rounded-lg bg-card border hover:shadow-lg transition-all duration-300 hover:scale-105"
+                className="p-6 rounded-lg bg-card border hover:shadow-lg transition-all duration-300 hover:scale-105 animate-fade-in"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary-foreground" />
@@ -99,6 +100,32 @@ const Home = () => {
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.1s" }}>
+              <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
+                500+
+              </div>
+              <p className="text-muted-foreground text-lg">Bikes Available</p>
+            </div>
+            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.2s" }}>
+              <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
+                10k+
+              </div>
+              <p className="text-muted-foreground text-lg">Happy Riders</p>
+            </div>
+            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.3s" }}>
+              <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
+                24/7
+              </div>
+              <p className="text-muted-foreground text-lg">Customer Support</p>
+            </div>
           </div>
         </div>
       </section>
