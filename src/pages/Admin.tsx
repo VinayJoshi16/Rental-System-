@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Plus, Bike, Users, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +24,7 @@ const bikeSchema = z.object({
     message: "Rate must be a positive number",
   }),
   location: z.string().trim().max(200).optional(),
+  image_url: z.string().trim().url("Must be a valid URL").optional().or(z.literal("")),
 });
 
 const Admin = () => {
@@ -78,6 +80,7 @@ const Admin = () => {
         description: formData.get("description") as string,
         hourly_rate: formData.get("hourly_rate") as string,
         location: formData.get("location") as string,
+        image_url: formData.get("image_url") as string,
       };
 
       const validated = bikeSchema.parse(data);
@@ -88,6 +91,7 @@ const Admin = () => {
         description: validated.description || null,
         hourly_rate: Number(validated.hourly_rate),
         location: validated.location || null,
+        image_url: validated.image_url || null,
         status: "available",
       });
 
@@ -258,6 +262,19 @@ const Admin = () => {
                       )}
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="image_url">Image URL</Label>
+                      <Input
+                        id="image_url"
+                        name="image_url"
+                        type="url"
+                        placeholder="https://example.com/bike-image.jpg"
+                      />
+                      {formErrors.image_url && (
+                        <p className="text-sm text-destructive">{formErrors.image_url}</p>
+                      )}
+                    </div>
+
                     <Button
                       type="submit"
                       variant="hero"
@@ -277,14 +294,31 @@ const Admin = () => {
                 {bikes.map((bike) => (
                   <div
                     key={bike.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-start gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                   >
-                    <div>
+                    {bike.image_url ? (
+                      <img
+                        src={bike.image_url}
+                        alt={bike.name}
+                        className="w-20 h-20 object-cover rounded-md"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center">
+                        <Bike className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1">
                       <h3 className="font-semibold">{bike.name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {bike.type} • ${bike.hourly_rate}/hr • {bike.status}
+                        {bike.type} • ${bike.hourly_rate}/hr
                       </p>
+                      {bike.location && (
+                        <p className="text-xs text-muted-foreground mt-1">📍 {bike.location}</p>
+                      )}
                     </div>
+                    <Badge variant={bike.status === "available" ? "default" : "secondary"}>
+                      {bike.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
