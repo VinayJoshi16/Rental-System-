@@ -1,11 +1,35 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Bike, Clock, Shield, Zap } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import heroImage from "@/assets/hero-bikes.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [openDialog, setOpenDialog] = useState<string | null>(null);
+
+  const statsInfo = {
+    bikes: {
+      title: "500+ Bikes Available",
+      description: "Our extensive fleet includes mountain bikes, city bikes, electric bikes, and more. All maintained to the highest standards and regularly serviced for your safety and comfort."
+    },
+    riders: {
+      title: "10k+ Happy Riders",
+      description: "Join our growing community of satisfied customers who trust PedalSync for their daily commutes, weekend adventures, and fitness journeys. Over 10,000 rides completed with 4.8/5 average rating."
+    },
+    support: {
+      title: "24/7 Customer Support",
+      description: "Our dedicated support team is available around the clock to assist you with bookings, technical issues, or any questions. Reach us via chat, email, or phone anytime."
+    }
+  };
 
   const features = [
     {
@@ -108,19 +132,31 @@ const Home = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.1s" }}>
+            <div 
+              className="p-8 animate-scale-in cursor-pointer hover:bg-card/50 rounded-lg transition-all hover:scale-105" 
+              style={{ animationDelay: "0.1s" }}
+              onClick={() => setOpenDialog("bikes")}
+            >
               <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
                 500+
               </div>
               <p className="text-muted-foreground text-lg">Bikes Available</p>
             </div>
-            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.2s" }}>
+            <div 
+              className="p-8 animate-scale-in cursor-pointer hover:bg-card/50 rounded-lg transition-all hover:scale-105" 
+              style={{ animationDelay: "0.2s" }}
+              onClick={() => setOpenDialog("riders")}
+            >
               <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
                 10k+
               </div>
               <p className="text-muted-foreground text-lg">Happy Riders</p>
             </div>
-            <div className="p-8 animate-scale-in" style={{ animationDelay: "0.3s" }}>
+            <div 
+              className="p-8 animate-scale-in cursor-pointer hover:bg-card/50 rounded-lg transition-all hover:scale-105" 
+              style={{ animationDelay: "0.3s" }}
+              onClick={() => setOpenDialog("support")}
+            >
               <div className="text-5xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent mb-2">
                 24/7
               </div>
@@ -129,6 +165,34 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Stats Dialogs */}
+      <Dialog open={openDialog === "bikes"} onOpenChange={(open) => !open && setOpenDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{statsInfo.bikes.title}</DialogTitle>
+            <DialogDescription>{statsInfo.bikes.description}</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDialog === "riders"} onOpenChange={(open) => !open && setOpenDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{statsInfo.riders.title}</DialogTitle>
+            <DialogDescription>{statsInfo.riders.description}</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openDialog === "support"} onOpenChange={(open) => !open && setOpenDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{statsInfo.support.title}</DialogTitle>
+            <DialogDescription>{statsInfo.support.description}</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       {/* CTA Section */}
       <section className="py-20">

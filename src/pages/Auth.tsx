@@ -98,7 +98,10 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary-glow/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center gap-2 mb-4">
+          <div 
+            className="inline-flex items-center justify-center gap-2 mb-4 cursor-pointer hover:scale-105 transition-transform"
+            onClick={() => navigate("/")}
+          >
             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
               <Bike className="w-7 h-7 text-primary-foreground" />
             </div>

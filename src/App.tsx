@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import AdminSignup from "./pages/AdminSignup";
 import Bikes from "./pages/Bikes";
 import MyRentals from "./pages/MyRentals";
 import Admin from "./pages/Admin";
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin/signup" element={<AdminSignup />} />
             <Route path="/bikes" element={<Bikes />} />
             <Route path="/my-rentals" element={<MyRentals />} />
             <Route path="/admin" element={<Admin />} />
