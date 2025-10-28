@@ -104,6 +104,3 @@ The built files will be in the `dist` directory.
 5. Push to the branch
 6. Open a Pull Request
 
-## License
-
-This project is licensed under the MIT License.
