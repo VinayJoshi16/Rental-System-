@@ -1,73 +1,109 @@
-# Welcome to your Lovable project
+# PedalSync - Modern Bike Rental System
 
-## Project info
+A modern, responsive bike rental application built with React, TypeScript, and Supabase.
 
-**URL**: https://lovable.dev/projects/9e5ff55f-9b6a-4d30-bd55-e85e2900edd0
+## Features
 
-## How can I edit this code?
+- **Real-time Bike Availability**: Check bike availability in real-time
+- **Secure Booking System**: Secure user authentication and booking management
+- **Admin Dashboard**: Complete admin panel for bike and user management
+- **Responsive Design**: Mobile-first design with modern UI components
+- **User Management**: User registration, authentication, and rental history
 
-There are several ways of editing your application.
+## Technologies Used
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase (Database, Authentication, Real-time)
+- **State Management**: React Query (TanStack Query)
+- **Routing**: React Router DOM
+- **Forms**: React Hook Form with Zod validation
+- **Icons**: Lucide React
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9e5ff55f-9b6a-4d30-bd55-e85e2900edd0) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase account and project
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+1. Clone the repository:
+```bash
 git clone <YOUR_GIT_URL>
+cd pedal-sync-app
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Set up environment variables:
+Create a `.env.local` file in the root directory and add your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── BikeCard.tsx    # Bike display component
+│   └── Navbar.tsx      # Navigation component
+├── pages/              # Page components
+│   ├── Home.tsx        # Landing page
+│   ├── Bikes.tsx       # Bike listing page
+│   ├── Auth.tsx        # Authentication page
+│   ├── Admin.tsx       # Admin dashboard
+│   └── MyRentals.tsx   # User rentals page
+├── hooks/              # Custom React hooks
+├── integrations/       # External service integrations
+│   └── supabase/       # Supabase configuration
+└── lib/                # Utility functions
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Available Scripts
 
-## What technologies are used for this project?
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
 
-This project is built with:
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The application can be deployed to any static hosting service like Vercel, Netlify, or GitHub Pages.
 
-## How can I deploy this project?
+For production deployment:
+```bash
+npm run build
+```
 
-Simply open [Lovable](https://lovable.dev/projects/9e5ff55f-9b6a-4d30-bd55-e85e2900edd0) and click on Share -> Publish.
+The built files will be in the `dist` directory.
 
-## Can I connect a custom domain to my Lovable project?
+## Contributing
 
-Yes, you can!
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Commit your changes
+5. Push to the branch
+6. Open a Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is licensed under the MIT License.
