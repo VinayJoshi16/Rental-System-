@@ -17,9 +17,15 @@ async function fetchApi<T>(
     (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
   }
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-  const data = await res.json().catch(() => ({}));
+  const contentType = res.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+  const data = isJson ? await res.json().catch(() => ({})) : await res.text().catch(() => "");
   if (!res.ok) {
-    throw new Error(data.error || data.message || "Request failed");
+    const msg =
+      typeof data === "object" && data
+        ? ((data as any).error || (data as any).message)
+        : "";
+    throw new Error(msg || `Request failed (${res.status})`);
   }
   return data as T;
 }

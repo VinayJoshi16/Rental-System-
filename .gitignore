@@ -107,3 +107,7 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+msg-filter.js
+msg-filter.py
+msg-filter.sh

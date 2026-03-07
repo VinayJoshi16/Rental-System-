@@ -17,6 +17,7 @@ export async function connectDB() {
   return db;
 }
 
-export function getDB() {
-  return db;
+export async function getDB() {
+  if (db) return db;
+  return await connectDB();
 }
