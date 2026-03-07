@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { Navbar } from "@/components/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ const Admin = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [selectedType, setSelectedType] = useState("");
 
   useEffect(() => {
     if (!authLoading && (!user || !isAdmin)) {
@@ -43,32 +44,13 @@ const Admin = () => {
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["admin-stats"],
-    queryFn: async () => {
-      const [bikesRes, rentalsRes, usersRes] = await Promise.all([
-        supabase.from("bikes").select("count", { count: "exact" }),
-        supabase.from("rentals").select("count", { count: "exact" }).eq("status", "active"),
-        supabase.from("profiles").select("count", { count: "exact" }),
-      ]);
-
-      return {
-        totalBikes: bikesRes.count || 0,
-        activeRentals: rentalsRes.count || 0,
-        totalUsers: usersRes.count || 0,
-      };
-    },
+    queryFn: () => api.admin.stats(),
     enabled: !!user && isAdmin,
   });
 
   const { data: bikes } = useQuery({
     queryKey: ["admin-bikes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bikes")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => api.bikes.list(),
     enabled: !!user && isAdmin,
   });
 
@@ -76,7 +58,7 @@ const Admin = () => {
     mutationFn: async (formData: FormData) => {
       const data = {
         name: formData.get("name") as string,
-        type: formData.get("type") as string,
+        type: selectedType || (formData.get("type") as string),
         description: formData.get("description") as string,
         hourly_rate: formData.get("hourly_rate") as string,
         location: formData.get("location") as string,
@@ -85,28 +67,27 @@ const Admin = () => {
 
       const validated = bikeSchema.parse(data);
 
-      const { error } = await supabase.from("bikes").insert({
+      await api.bikes.create({
         name: validated.name,
         type: validated.type,
-        description: validated.description || null,
+        description: validated.description || undefined,
         hourly_rate: Number(validated.hourly_rate),
-        location: validated.location || null,
-        image_url: validated.image_url || null,
+        location: validated.location || undefined,
+        image_url: validated.image_url || undefined,
         status: "available",
       });
-
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-bikes"] });
       queryClient.invalidateQueries({ queryKey: ["bikes"] });
       queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
-      toast.success("Bike added successfully!");
+      toast.success("Bike / Scooty added successfully!");
       setIsDialogOpen(false);
       setFormErrors({});
+      setSelectedType("");
     },
-    onError: (error: any) => {
-      toast.error(error.message || "Failed to add bike");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to add bike / scooty");
     },
   });
 
@@ -146,53 +127,53 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-12">
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-4">Admin Dashboard</h1>
+        <div className="mb-10">
+          <h1 className="text-4xl sm:text-5xl font-bold mb-2 tracking-tight">
+            Admin <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">Dashboard</span>
+          </h1>
           <p className="text-muted-foreground text-lg">
-            Manage bikes and monitor system activity
+            Manage bikes, scooties and monitor system activity
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <Card className="rounded-2xl border border-border/80 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Bikes</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Bikes & Scooties</CardTitle>
               <Bike className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats?.totalBikes}</div>
+              <div className="text-3xl font-bold text-primary">{stats?.totalBikes ?? 0}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl border border-border/80 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Active Rentals</CardTitle>
               <Receipt className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-accent">{stats?.activeRentals}</div>
+              <div className="text-3xl font-bold text-accent">{stats?.activeRentals ?? 0}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-2xl border border-border/80 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{stats?.totalUsers}</div>
+              <div className="text-3xl font-bold">{stats?.totalUsers ?? 0}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Bikes Management */}
-        <Card>
+        <Card className="rounded-2xl border border-border/80 shadow-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Bike Fleet</CardTitle>
+              <CardTitle>Bike & Scooty Fleet</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="hero">
@@ -202,11 +183,11 @@ const Admin = () => {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Add New Bike</DialogTitle>
+                    <DialogTitle>Add New Bike or Scooty</DialogTitle>
                   </DialogHeader>
                   <form onSubmit={handleAddBike} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Bike Name*</Label>
+                      <Label htmlFor="name">Name*</Label>
                       <Input id="name" name="name" required />
                       {formErrors.name && (
                         <p className="text-sm text-destructive">{formErrors.name}</p>
@@ -215,16 +196,24 @@ const Admin = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="type">Type*</Label>
-                      <Select name="type" required>
+                      <Select
+                        value={selectedType}
+                        onValueChange={setSelectedType}
+                        required
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Mountain">Mountain</SelectItem>
-                          <SelectItem value="Road">Road</SelectItem>
-                          <SelectItem value="City">City</SelectItem>
-                          <SelectItem value="Electric">Electric</SelectItem>
-                          <SelectItem value="Hybrid">Hybrid</SelectItem>
+                          <SelectItem value="Bike">Bike</SelectItem>
+                          <SelectItem value="Sports">Sports</SelectItem>
+                          <SelectItem value="Cruiser">Cruiser</SelectItem>
+                          <SelectItem value="Roadster">Roadster</SelectItem>
+                          <SelectItem value="Adventure">Adventure</SelectItem>
+                          <SelectItem value="Neo Retro">Neo Retro</SelectItem>
+                          <SelectItem value="Scooty">Scooty</SelectItem>
+                          <SelectItem value="Scooter">Scooter</SelectItem>
+                          <SelectItem value="Electric Scooter">Electric Scooter</SelectItem>
                         </SelectContent>
                       </Select>
                       {formErrors.type && (
@@ -281,7 +270,7 @@ const Admin = () => {
                       className="w-full"
                       disabled={addBikeMutation.isPending}
                     >
-                      {addBikeMutation.isPending ? "Adding..." : "Add Bike"}
+                      {addBikeMutation.isPending ? "Adding..." : "Add Bike / Scooty"}
                     </Button>
                   </form>
                 </DialogContent>
@@ -324,7 +313,7 @@ const Admin = () => {
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
-                No bikes yet. Add your first bike to get started.
+                No bikes or scooties yet. Add your first vehicle to get started.
               </p>
             )}
           </CardContent>

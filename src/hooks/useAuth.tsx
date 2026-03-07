@@ -1,131 +1,116 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { api, ApiUser } from "@/lib/api";
+
+const TOKEN_KEY = "token";
+const USER_KEY = "user";
+
+function getStoredUser(): ApiUser | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as ApiUser) : null;
+  } catch {
+    return null;
+  }
+}
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: ApiUser | null;
+  session: { user: ApiUser } | null;
   isAdmin: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  setUser: (user: ApiUser | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<ApiUser | null>(getStoredUser);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  const session = user ? { user } : null;
+
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminStatus(session.user.id);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        checkAdminStatus(session.user.id);
-      }
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      setUser(null);
+      setIsAdmin(false);
       setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+      return;
+    }
+    api.auth
+      .me()
+      .then((u) => {
+        setUser(u);
+        localStorage.setItem(USER_KEY, JSON.stringify(u));
+        return api.auth.isAdmin();
+      })
+      .then(({ isAdmin: admin }) => setIsAdmin(admin))
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        setUser(null);
+        setIsAdmin(false);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const checkAdminStatus = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (error) throw error;
-      setIsAdmin(!!data);
-    } catch (error) {
-      console.error("Error checking admin status:", error);
+      const { isAdmin: admin } = await api.auth.isAdmin();
+      setIsAdmin(admin);
+    } catch {
       setIsAdmin(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-      
-      toast.success("Welcome back!");
-      navigate("/bikes");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
-      throw error;
-    }
+    const { user: u, token } = await api.auth.login(email, password);
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+    setUser(u);
+    await checkAdminStatus(u.id);
+    toast.success("Welcome back!");
+    navigate("/bikes");
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/bikes`,
-        },
-      });
-
-      if (error) throw error;
-      
-      toast.success("Account created! Please check your email to verify.");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign up");
-      throw error;
-    }
+    const { user: u, token } = await api.auth.register(email, password, fullName);
+    localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
+    setUser(u);
+    toast.success("Account created!");
+    navigate("/bikes");
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      setIsAdmin(false);
-      toast.success("Signed out successfully");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign out");
-      throw error;
-    }
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
+    setIsAdmin(false);
+    toast.success("Signed out successfully");
+    navigate("/");
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isAdmin,
+        loading,
+        signIn,
+        signUp,
+        signOut,
+        setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

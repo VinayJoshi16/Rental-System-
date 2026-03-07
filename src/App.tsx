@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import AdminSignup from "./pages/AdminSignup";
 import Bikes from "./pages/Bikes";
+import Plans from "./pages/Plans";
+import Payment from "./pages/Payment";
 import MyRentals from "./pages/MyRentals";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
@@ -19,13 +21,15 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/signup" element={<AdminSignup />} />
             <Route path="/bikes" element={<Bikes />} />
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/payment" element={<Payment />} />
             <Route path="/my-rentals" element={<MyRentals />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

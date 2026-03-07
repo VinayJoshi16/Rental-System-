@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 const adminSignUpSchema = z.object({
@@ -22,12 +22,11 @@ const adminSignUpSchema = z.object({
 });
 
 const AdminSignup = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Redirect if already logged in
   if (user) {
     navigate("/admin");
     return null;
@@ -50,50 +49,20 @@ const AdminSignup = () => {
     try {
       adminSignUpSchema.parse(data);
 
-      // Verify admin code (in production, this should be validated server-side)
-      if (data.adminCode !== "ADMIN2024") {
-        setErrors({ adminCode: "Invalid admin code" });
-        setLoading(false);
-        return;
-      }
+      const { user: u, token } = await api.admin.signup(
+        data.email,
+        data.password,
+        data.fullName,
+        data.adminCode
+      );
 
-      // Sign up the user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/admin`,
-          data: {
-            full_name: data.fullName,
-          },
-        },
-      });
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(u));
+      setUser(u);
 
-      if (signUpError) {
-        toast.error(signUpError.message);
-        setLoading(false);
-        return;
-      }
-
-      if (authData.user) {
-        // Insert admin role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: "admin",
-          });
-
-        if (roleError) {
-          toast.error("Failed to assign admin role");
-          setLoading(false);
-          return;
-        }
-
-        toast.success("Admin account created successfully!");
-        navigate("/admin");
-      }
-    } catch (error) {
+      toast.success("Admin account created successfully!");
+      navigate("/admin");
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -102,6 +71,9 @@ const AdminSignup = () => {
           }
         });
         setErrors(fieldErrors);
+      } else if (error instanceof Error) {
+        toast.error(error.message);
+        setErrors({ adminCode: error.message });
       }
     } finally {
       setLoading(false);
@@ -111,11 +83,7 @@ const AdminSignup = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary-glow/5 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          className="mb-4"
-          onClick={() => navigate("/")}
-        >
+        <Button variant="ghost" className="mb-4" onClick={() => navigate("/")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Button>
@@ -143,13 +111,7 @@ const AdminSignup = () => {
             <form onSubmit={handleAdminSignUp} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  placeholder="Admin Name"
-                  required
-                />
+                <Input id="fullName" name="fullName" type="text" placeholder="Admin Name" required />
                 {errors.fullName && (
                   <p className="text-sm text-destructive">{errors.fullName}</p>
                 )}
@@ -157,27 +119,13 @@ const AdminSignup = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="admin@example.com"
-                  required
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email}</p>
-                )}
+                <Input id="email" name="email" type="email" placeholder="admin@example.com" required />
+                {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                />
+                <Input id="password" name="password" type="password" placeholder="••••••••" required />
                 {errors.password && (
                   <p className="text-sm text-destructive">{errors.password}</p>
                 )}

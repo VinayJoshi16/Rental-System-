@@ -107,6 +107,3 @@ temp/
 *.njsproj
 *.sln
 *.sw?
-
-# Supabase
-.supabase/

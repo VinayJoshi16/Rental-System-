@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +28,11 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Redirect if already logged in
-  if (user) {
-    navigate("/bikes");
-    return null;
-  }
+  useEffect(() => {
+    if (user) navigate("/bikes");
+  }, [user, navigate]);
+
+  if (user) return null;
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,6 +57,8 @@ const Auth = () => {
           }
         });
         setErrors(fieldErrors);
+      } else if (error instanceof Error) {
+        setErrors({ form: error.message });
       }
     } finally {
       setLoading(false);
@@ -88,6 +90,8 @@ const Auth = () => {
           }
         });
         setErrors(fieldErrors);
+      } else if (error instanceof Error) {
+        setErrors({ form: error.message });
       }
     } finally {
       setLoading(false);
@@ -95,24 +99,24 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary-glow/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background bg-pattern flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div 
-            className="inline-flex items-center justify-center gap-2 mb-4 cursor-pointer hover:scale-105 transition-transform"
+            className="inline-flex items-center justify-center gap-3 mb-4 cursor-pointer hover:scale-105 transition-transform"
             onClick={() => navigate("/")}
           >
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center">
-              <Bike className="w-7 h-7 text-primary-foreground" />
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+              <Bike className="w-8 h-8 text-primary-foreground" />
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+            <span className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent tracking-tight">
               PedalSync
             </span>
           </div>
-          <p className="text-muted-foreground">Start your cycling journey today</p>
+          <p className="text-muted-foreground text-lg">Start your cycling journey today</p>
         </div>
 
-        <Card>
+        <Card className="rounded-2xl border border-border/80 shadow-xl">
           <CardHeader>
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in to your account or create a new one</CardDescription>
@@ -153,6 +157,10 @@ const Auth = () => {
                       <p className="text-sm text-destructive">{errors.password}</p>
                     )}
                   </div>
+
+                  {errors.form && (
+                    <p className="text-sm text-destructive">{errors.form}</p>
+                  )}
 
                   <Button type="submit" variant="hero" className="w-full" disabled={loading}>
                     {loading ? "Signing in..." : "Sign In"}
@@ -217,6 +225,10 @@ const Auth = () => {
                       <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                     )}
                   </div>
+
+                  {errors.form && (
+                    <p className="text-sm text-destructive">{errors.form}</p>
+                  )}
 
                   <Button type="submit" variant="hero" className="w-full" disabled={loading}>
                     {loading ? "Creating account..." : "Sign Up"}
