@@ -1,5 +1,11 @@
-const API_URL =
-  import.meta.env.VITE_API_URL || "https://rental-system-ao29.onrender.com/api";
+function getApiBaseUrl() {
+  const envUrl = import.meta.env.VITE_API_URL as string | undefined;
+  const fallback = "https://rental-system-ao29.onrender.com";
+  const base = (envUrl && envUrl.trim().length > 0 ? envUrl : fallback).replace(/\/$/, "");
+  return base.endsWith("/api") ? base : `${base}/api`;
+}
+
+const API_URL = getApiBaseUrl();
 
 function getToken(): string | null {
   return localStorage.getItem("token");
