@@ -67,6 +67,48 @@ router.post("/", authMiddleware, async (req, res) => {
     if (!bike_id) return res.status(400).json({ error: "bike_id required" });
     if (!aadhar_card) return res.status(400).json({ error: "Aadhar card number required" });
     if (!license_number) return res.status(400).json({ error: "License number required" });
+
+    // Indian DL format validation: e.g. "MH03 20080022135"
+    // Expected: 2 letters (state) + 2 digits (RTO) + space + 11 digits (year + serial)
+    const rawDl = String(license_number).toUpperCase().trim();
+    const displayExample = "MH03 20080022135";
+
+    const rawPattern = /^[A-Z]{2}\d{2}\s\d{11}$/;
+    if (!rawPattern.test(rawDl)) {
+      return res.status(400).json({
+        error:
+          `Invalid driving licence number format. Example: ${displayExample} (2 letters, 2 digits, space, 11 digits).`,
+      });
+    }
+
+    const dl = rawDl.replace(/\s+/g, "");
+    const stateCode = dl.slice(0, 2);
+    const rtoCode = dl.slice(2, 4);
+    const yearPart = dl.slice(4, 8);
+
+    const validStates = [
+      "AN","AP","AR","AS","BR","CH","CG","DD","DL","DN","GA","GJ","HP","HR","JH","JK","KA","KL","LA","LD",
+      "MH","ML","MN","MP","MZ","NL","OD","PB","PY","RJ","SK","TN","TR","TS","UK","UP","WB"
+    ];
+
+    const rtoNum = Number(rtoCode);
+    const yearNum = Number(yearPart);
+    const currentYear = new Date().getFullYear();
+
+    if (
+      !validStates.includes(stateCode) ||
+      !Number.isInteger(rtoNum) ||
+      rtoNum < 1 ||
+      rtoNum > 99 ||
+      !Number.isInteger(yearNum) ||
+      yearNum < 1950 ||
+      yearNum > currentYear + 1
+    ) {
+      return res.status(400).json({
+        error:
+          `Driving licence number is not valid. Please enter it exactly as on the card, e.g. ${displayExample}.`,
+      });
+    }
     const oid = ObjectId.isValid(bike_id) ? new ObjectId(bike_id) : null;
     if (!oid) return res.status(400).json({ error: "Invalid bike id" });
     const bike = await db.collection("bikes").findOne({ _id: oid });
@@ -78,8 +120,7 @@ router.post("/", authMiddleware, async (req, res) => {
     const bikeIdStr = bike._id.toString();
     const normalizedAadhar =
       typeof aadhar_card === "string" ? aadhar_card.replace(/\D/g, "").slice(0, 12) : undefined;
-    const normalizedLicense =
-      typeof license_number === "string" ? license_number.trim().slice(0, 32) : undefined;
+    const normalizedLicense = dl;
 
     const rentalResult = await db.collection("rentals").insertOne({
       user_id: req.user.sub,
