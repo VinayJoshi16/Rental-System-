@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://rental-system-ao29.onrender.com/api";
 
 function getToken(): string | null {
   return localStorage.getItem("token");
